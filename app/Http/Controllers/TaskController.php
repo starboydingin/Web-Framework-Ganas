@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Task;
+use App\Services\TaskService;
+
+class TaskController extends Controller
+{
+    protected $service;
+
+    public function __construct(TaskService $service)
+    {
+        $this->service = $service;
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'project_id' => 'required|integer',
+            'user_id' => 'required|integer',
+            'title' => 'required|string',
+            'description' => 'nullable|string',
+            'deadline' => 'nullable|date',
+            'priority' => 'required|in:low,medium,high',
+            'status' => 'required|in:pending,in_progress,completed,overdue',
+            'reminders' => 'nullable|array'
+        ]);
+
+        $task = $this->service->createTask($data);
+
+        return response()->json($task);
+    }
+
+    public function index(Request $request)
+    {
+        $projectId = $request->query('project_id');
+        $tasks = $projectId ? $this->service->getTasksByProject($projectId) 
+            : $this->service->getAllTasks();
+
+        return response()->json($tasks);
+    }
+}
