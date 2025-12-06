@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle, Lock, Mail } from "lucide-react";
+import { ArrowLeft, CheckCircle, Lock, Phone } from "lucide-react";
 import { useState } from "react";
 import useTheme from "../Components/useTheme";
 import api, { setToken } from "../api/client";
@@ -78,7 +78,7 @@ export default function LoginPage() {
             <div>
               <label className={`${theme === 'light' ? 'text-[#1A1A1A]' : 'text-white'} text-sm mb-2 block`}>Nomor Telepon</label>
               <div className="relative">
-                <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${theme === 'light' ? 'text-[#1A1A1A]/40' : 'text-white/40'}`} />
+                <Phone className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${theme === 'light' ? 'text-[#1A1A1A]/40' : 'text-white/40'}`} />
                 <input
                   type="tel"
                   value={phoneNumber}

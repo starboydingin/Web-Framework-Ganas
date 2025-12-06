@@ -149,9 +149,45 @@ export default function Dashboard() {
       }
     } catch {}
 
+    // Update displayName from stored auth_user when the app mounts
+    try {
+      const authUserStr = localStorage.getItem('auth_user');
+      if (authUserStr) {
+        const authUser = JSON.parse(authUserStr);
+        const inferred = authUser?.name || authUser?.phone_number || (authUser?.email ? authUser.email.split('@')[0] : null) || localStorage.getItem('userName');
+        if (inferred) setDisplayName(inferred);
+      } else {
+        const fallbackName = localStorage.getItem('userName');
+        if (fallbackName) setDisplayName(fallbackName);
+      }
+    } catch {};
+
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+
+    // Fetch authenticated profile and sync user info
+    (async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (res.ok) {
+            const user = await res.json();
+            const name = user?.name || '';
+            const phone = user?.phone_number || '';
+            if (phone) {
+              localStorage.setItem('auth_user', JSON.stringify({ phone_number: phone }));
+              localStorage.setItem('userPhone', phone);
+            }
+            if (name) {
+              localStorage.setItem('userName', name);
+            }
+            setDisplayName(name || phone || (resolvedUser ? (resolvedUser.split('@')[0] || resolvedUser) : 'User'));
+          }
+        }
+      } catch (err) {}
+    })();
 
     // Fetch projects from API
     (async () => {
@@ -167,6 +203,28 @@ export default function Dashboard() {
       }
     })();
 
+    // Sync displayName when localStorage changes in other tabs
+    const onStorage = (e) => {
+      if (!e) return;
+      if (e.key === 'auth_user' || e.key === 'userName') {
+        try {
+          const authUserStr = localStorage.getItem('auth_user');
+          if (authUserStr) {
+            const authUser = JSON.parse(authUserStr);
+            const inferred = authUser?.name || authUser?.phone_number || (authUser?.email ? authUser.email.split('@')[0] : null) || localStorage.getItem('userName');
+            setDisplayName(inferred || 'User');
+          } else {
+            setDisplayName(localStorage.getItem('userName') || 'User');
+          }
+        } catch {
+          setDisplayName(localStorage.getItem('userName') || 'User');
+        }
+      }
+    };
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('storage', onStorage);
+    }
+
     // Initial tasks will be fetched per selected project below
     
     setTimeout(() => setIsLoading(false), 800);
@@ -175,7 +233,25 @@ export default function Dashboard() {
     if (savedNotifications) {
       setNotifications(JSON.parse(savedNotifications));
     }
+
+    return () => {
+      if (typeof window !== 'undefined' && window.removeEventListener) {
+        window.removeEventListener('storage', onStorage);
+      }
+    };
   }, []);
+
+  // Also watch for immediate local changes in the same tab that may update auth_user
+  useEffect(() => {
+    try {
+      const authUserStr = localStorage.getItem('auth_user');
+      if (authUserStr) {
+        const authUser = JSON.parse(authUserStr);
+        const inferred = authUser?.name || authUser?.phone_number || (authUser?.email ? authUser.email.split('@')[0] : null) || localStorage.getItem('userName');
+        if (inferred) setDisplayName(inferred);
+      }
+    } catch {}
+  }, [/* runs on mount; kept empty intentionally to perform a single check */]);
 
   useEffect(() => {
     if (tasks.length > 0 && !isLoading) {
@@ -208,8 +284,14 @@ export default function Dashboard() {
     (async () => {
       try {
         if (selectedProject?.id) {
-          const list = await api.tasks.list({ project_id: selectedProject.id });
-          setTasks(Array.isArray(list) ? list : []);
+          const token = localStorage.getItem('auth_token');
+          const headers = { Accept: 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          const res = await fetch(`/api/tasks?project_id=${encodeURIComponent(selectedProject.id)}`, { headers });
+          if (!res.ok) throw new Error('Failed to fetch tasks');
+          const payload = await res.json();
+          const list = Array.isArray(payload) ? payload : (payload.data || []);
+          setTasks(list);
         }
       } catch (err) {
         // keep existing tasks if API fails
@@ -759,8 +841,7 @@ export default function Dashboard() {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#2A2A2A] rounded-xl shadow-lg border border-[#E8E8E8] dark:border-[#333] py-2">
                     <div className="px-4 py-2 border-b border-[#E8E8E8] dark:border-[#333]">
-                      <p className="text-[#1A1A1A] dark:text-white text-sm truncate">{currentUser || 'pengguna@contoh.com'}</p>
-                      <p className="text-[#1A1A1A]/60 dark:text-white/60 text-xs">Paket Gratis</p>
+                      <p className="text-[#1A1A1A] dark:text-white text-sm truncate">{resolvedUser || displayName || 'pengguna@contoh.com'}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -775,17 +856,8 @@ export default function Dashboard() {
                     <button
                       onClick={async () => {
                         try {
-                          await api.logout();
+                          await logout();
                         } catch {}
-                        try {
-                          localStorage.removeItem('auth_user');
-                          localStorage.removeItem('auth_token');
-                          localStorage.removeItem('projects');
-                          localStorage.removeItem('tasks');
-                          localStorage.removeItem('notifications');
-                        } catch {}
-                        if (onLogout) onLogout();
-                        window.location.href = '/';
                       }}
                       className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                     >

@@ -4,12 +4,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProfileController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'index']);
+        Route::put('/', [ProfileController::class, 'update']);
+    });
     Route::prefix('projects')->group(function () {
         Route::post('/', [ProjectController::class, 'store']);  
         Route::put('/{project}', [ProjectController::class, 'update']);  

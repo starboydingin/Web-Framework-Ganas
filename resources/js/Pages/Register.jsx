@@ -1,4 +1,4 @@
-import { ArrowLeft, Lock, Mail, User } from "lucide-react";
+import { ArrowLeft, Lock, Phone, User } from "lucide-react";
 import { useState } from "react";
 import useTheme from "../Components/useTheme";
 import api from "../api/client";
@@ -77,7 +77,7 @@ export default function RegisterPage() {
           </div>
 
           <div className={`flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-[#4CAF50] transition-colors ${theme === "light" ? "border-gray-300" : "border-white/20"}`}>
-            <Mail className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
+            <Phone className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
             <input
               type="tel"
               placeholder="Nomor Telepon"

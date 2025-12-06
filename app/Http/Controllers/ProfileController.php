@@ -3,52 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function edit(Request $request): Response
-    {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
-    }
+	/**
+	 * Return the authenticated user's profile.
+	 */
+	public function index(Request $request)
+	{
+		$user = $request->user();
+		if (!$user) {
+			return response()->json(['message' => 'Unauthenticated'], 401);
+		}
 
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
+		return response()->json($user);
+	}
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+	/**
+	 * Update the authenticated user's profile.
+	 * Only allows changing the `name` field; `phone_number` cannot be changed via this endpoint.
+	 */
+	public function update(ProfileUpdateRequest $request)
+	{
+		$user = $request->user();
+		if (!$user) {
+			return response()->json(['message' => 'Unauthenticated'], 401);
+		}
 
-        $request->user()->save();
+		// Only accept `name` from the validated request payload. Ignore phone_number even if provided.
+		$data = $request->only('name');
 
-        return Redirect::route('profile.edit');
-    }
+		$user->fill($data);
+		$user->save();
 
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
+		// Refresh model from database to ensure latest persisted values (timestamps, casts)
+		$user->refresh();
 
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
+		return response()->json($user);
+	}
 }

@@ -1,32 +1,41 @@
-import { useState } from 'react';
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Settings, 
-  Bell, 
-  Shield, 
-  LogOut,
-  CheckCircle,
+import {
   ArrowLeft,
+  Bell,
+  Calendar,
+  CheckCircle,
   Edit2,
-  X,
+  LogOut,
+  Moon,
+  Phone,
   Sun,
-  Moon
+  User
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Profile({ currentUser, onLogout, onBack }) {
   const [theme, setTheme] = useState(
     localStorage.getItem('theme') || 'light'
   );
   const [isEditMode, setIsEditMode] = useState(false);
-  const [userName, setUserName] = useState(
-    localStorage.getItem('userName') || (currentUser ? currentUser.split('@')[0] : 'User')
-  );
+  // Try to derive user info from stored auth_user (if backend set it), fall back to localStorage and props
+  let parsedAuthUser = null;
+  try {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (authUserStr) parsedAuthUser = JSON.parse(authUserStr);
+  } catch {}
+
+  const initialUserName = localStorage.getItem('userName')
+    || (parsedAuthUser?.name)
+    || (parsedAuthUser?.email ? parsedAuthUser.email.split('@')[0] : null)
+    || (currentUser ? (currentUser.split('@')[0] || currentUser) : 'Pengguna');
+
+  const initialPhone = parsedAuthUser?.phone_number || parsedAuthUser?.phone || localStorage.getItem('userPhone') || currentUser || '081234567890';
+
+  const [userName, setUserName] = useState(initialUserName);
   const [tempUserData, setTempUserData] = useState({
     name: userName,
-    phone_number: currentUser || localStorage.getItem('userPhone') || '081234567890',
-    bio: localStorage.getItem('userBio') || 'Task management enthusiast'
+    phone_number: initialPhone,
+    bio: localStorage.getItem('userBio') || 'Penggemar manajemen tugas'
   });
 
   const toggleTheme = () => {
@@ -37,11 +46,49 @@ export default function Profile({ currentUser, onLogout, onBack }) {
   };
 
   const handleSaveProfile = () => {
-    setUserName(tempUserData.name);
-    localStorage.setItem('userName', tempUserData.name);
-    localStorage.setItem('userPhone', tempUserData.phone_number);
-    localStorage.setItem('userBio', tempUserData.bio);
-    setIsEditMode(false);
+    // Send update to API (only name). Phone number is managed elsewhere.
+    (async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const payload = { name: tempUserData.name };
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          // If validation or server error, fallback to local update but log error.
+          const text = await res.text();
+          console.error('Failed to update profile:', res.status, text);
+          // still update local UI to reflect change locally
+          setUserName(tempUserData.name);
+          localStorage.setItem('userName', tempUserData.name);
+          localStorage.setItem('userBio', tempUserData.bio);
+          setIsEditMode(false);
+          return;
+        }
+
+        const data = await res.json();
+        // Prefer server-returned name, fallback to what user entered
+        const newName = data?.name || tempUserData.name;
+        setUserName(newName);
+        localStorage.setItem('userName', newName);
+        // Do not overwrite phone in localStorage from UI (phone managed elsewhere)
+        localStorage.setItem('userBio', tempUserData.bio);
+        setIsEditMode(false);
+      } catch (err) {
+        console.error('Error updating profile:', err);
+        // fallback to local update so UI doesn't feel broken
+        setUserName(tempUserData.name);
+        localStorage.setItem('userName', tempUserData.name);
+        localStorage.setItem('userBio', tempUserData.bio);
+        setIsEditMode(false);
+      }
+    })();
   };
 
   const handleCancelEdit = () => {
@@ -53,17 +100,48 @@ export default function Profile({ currentUser, onLogout, onBack }) {
     setIsEditMode(false);
   };
 
-  const joinDate = new Date(2025, 0, 1).toLocaleDateString('en-US', {
+  const joinDate = new Date(2025, 0, 1).toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric'
   });
 
-  const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  const [tasksList, setTasksList] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tasks') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Fetch tasks for the current user if we have a numeric user id from auth_user
+  useEffect(() => {
+    const userId = parsedAuthUser?.id || parsedAuthUser?.user_id;
+    if (!userId) return; // nothing to fetch
+
+    const token = localStorage.getItem('auth_token');
+    const headers = { 'Accept': 'application/json' };
+    if (token) { headers['Authorization'] = `Bearer ${token}`; }
+
+    fetch(`/api/tasks?user_id=${encodeURIComponent(userId)}`, { headers })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch tasks');
+        return res.json();
+      })
+      .then(data => {
+        // data may be array or collection-like; store as array
+        setTasksList(Array.isArray(data) ? data : (data.data || []));
+        try { localStorage.setItem('tasks', JSON.stringify(Array.isArray(data) ? data : (data.data || []))); } catch (e) {}
+      })
+      .catch(() => {
+        // ignore fetch errors; keep existing local tasks
+      });
+  }, [parsedAuthUser?.id, parsedAuthUser?.user_id]);
+
   const stats = {
-    total: tasks.length,
-    completed: tasks.filter(t => t.completed).length,
-    pending: tasks.filter(t => !t.completed).length,
-    high: tasks.filter(t => t.priority === 'high' && !t.completed).length
+    total: tasksList.length,
+    completed: tasksList.filter(t => t.completed).length,
+    pending: tasksList.filter(t => !t.completed).length,
+    high: tasksList.filter(t => t.priority === 'high' && !t.completed).length
   };
 
   return (
@@ -84,7 +162,7 @@ export default function Profile({ currentUser, onLogout, onBack }) {
                   <CheckCircle className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-[#1A1A1A] dark:text-white hidden sm:block font-medium">
-                  Profile Settings
+                  Pengaturan Profil
                 </span>
               </div>
             </div>
@@ -114,9 +192,6 @@ export default function Profile({ currentUser, onLogout, onBack }) {
               <div className="w-24 h-24 bg-gradient-to-br from-[#4CAF50] to-[#45a049] rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <button className="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-[#2A2A2A] border-2 border-[#E8E8E8] dark:border-[#333] rounded-full flex items-center justify-center hover:bg-[#F5F5F5] dark:hover:bg-white/10 transition-colors">
-                <Edit2 className="w-4 h-4 text-[#1A1A1A] dark:text-white" />
-              </button>
             </div>
 
             {/* User Info */}
@@ -125,7 +200,7 @@ export default function Profile({ currentUser, onLogout, onBack }) {
                 {userName}
               </h1>
               <div className="flex items-center gap-2 text-[#1A1A1A]/60 dark:text-white/60 mb-1 justify-center sm:justify-start">
-                <Mail className="w-4 h-4" />
+                <Phone className="w-4 h-4" />
                 <span className="text-sm">{tempUserData.phone_number}</span>
               </div>
               <div className="flex items-center gap-2 text-[#1A1A1A]/60 dark:text-white/60 justify-center sm:justify-start">
@@ -141,25 +216,25 @@ export default function Profile({ currentUser, onLogout, onBack }) {
               <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white mb-1">
                 {stats.total}
               </p>
-              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Total Tasks</p>
+              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Total Tugas</p>
             </div>
             <div className="bg-[#F5F5F5] dark:bg-white/5 rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-[#4CAF50] mb-1">
                 {stats.completed}
               </p>
-              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Completed</p>
+              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Selesai</p>
             </div>
             <div className="bg-[#F5F5F5] dark:bg-white/5 rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-yellow-500 mb-1">
                 {stats.pending}
               </p>
-              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Pending</p>
+              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Belum Selesai</p>
             </div>
             <div className="bg-[#F5F5F5] dark:bg-white/5 rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-red-500 mb-1">
                 {stats.high}
               </p>
-              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">High Priority</p>
+              <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60">Prioritas Tinggi</p>
             </div>
           </div>
         </div>
@@ -169,9 +244,9 @@ export default function Profile({ currentUser, onLogout, onBack }) {
           {/* Edit Profile Section */}
           <div className="bg-white dark:bg-[#2A2A2A] rounded-xl border border-[#E8E8E8] dark:border-[#333] transition-colors overflow-hidden">
             <div className="p-4 border-b border-[#E8E8E8] dark:border-[#333] flex items-center justify-between">
-              <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
+                <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Edit Profile
+                Edit Profil
               </h2>
               {!isEditMode && (
                 <button
@@ -187,8 +262,8 @@ export default function Profile({ currentUser, onLogout, onBack }) {
             <div className="p-6 space-y-4">
               {/* Name Field */}
               <div>
-                <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Full Name
+                  <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
+                  Nama Lengkap
                 </label>
                 <input
                   type="text"
@@ -204,36 +279,17 @@ export default function Profile({ currentUser, onLogout, onBack }) {
               {/* Phone Number Field (Primary identifier) */}
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Phone Number
+                  Nomor Telepon
                 </label>
                 <input
                   type="tel"
                   value={tempUserData.phone_number}
-                  onChange={(e) => setTempUserData({ ...tempUserData, phone_number: e.target.value })}
-                  disabled={!isEditMode}
-                  className={`w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#4CAF50] transition-all ${
-                    !isEditMode ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
+                  disabled={true}
+                  className="w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#4CAF50] transition-all opacity-60 cursor-not-allowed"
                 />
                 <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60 mt-1">
-                  Used for login and authentication
+                  Digunakan untuk login dan otentikasi
                 </p>
-              </div>
-
-              {/* Bio Field */}
-              <div>
-                <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Bio
-                </label>
-                <textarea
-                  value={tempUserData.bio}
-                  onChange={(e) => setTempUserData({ ...tempUserData, bio: e.target.value })}
-                  disabled={!isEditMode}
-                  rows="3"
-                  className={`w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#4CAF50] transition-all resize-none ${
-                    !isEditMode ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
-                />
               </div>
 
               {/* Action Buttons */}
@@ -243,45 +299,27 @@ export default function Profile({ currentUser, onLogout, onBack }) {
                     onClick={handleCancelEdit}
                     className="flex-1 px-6 py-3 bg-[#F5F5F5] dark:bg-white/5 text-[#1A1A1A] dark:text-white border border-[#E8E8E8] dark:border-[#333] rounded-xl hover:bg-[#E8E8E8] dark:hover:bg-white/10 transition-all"
                   >
-                    Cancel
+                    Batal
                   </button>
                   <button
                     onClick={handleSaveProfile}
                     className="flex-1 px-6 py-3 bg-[#4CAF50] text-white rounded-xl hover:bg-[#45a049] transition-all shadow-lg shadow-[#4CAF50]/20"
                   >
-                    Save Changes
+                    Simpan Perubahan
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Account Settings */}
-          <div className="bg-white dark:bg-[#2A2A2A] rounded-xl border border-[#E8E8E8] dark:border-[#333] transition-colors overflow-hidden">
-            <div className="p-4 border-b border-[#E8E8E8] dark:border-[#333]">
-              <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Account Settings
-              </h2>
-            </div>
-            <div className="divide-y divide-[#E8E8E8] dark:divide-[#333]">
-              <button className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F5] dark:hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-[#1A1A1A]/60 dark:text-white/60" />
-                  <span className="text-[#1A1A1A] dark:text-white">Privacy & Security</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
           {/* Preferences */}
           <div className="bg-white dark:bg-[#2A2A2A] rounded-xl border border-[#E8E8E8] dark:border-[#333] transition-colors overflow-hidden">
             <div className="p-4 border-b border-[#E8E8E8] dark:border-[#333]">
-              <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Preferences
-              </h2>
-            </div>
+                <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
+                  <Bell className="w-5 h-5" />
+                  Preferensi
+                </h2>
+              </div>
             <div className="divide-y divide-[#E8E8E8] dark:divide-[#333]">
               <div className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -290,7 +328,7 @@ export default function Profile({ currentUser, onLogout, onBack }) {
                   ) : (
                     <Sun className="w-5 h-5 text-yellow-300" />
                   )}
-                  <span className="text-[#1A1A1A] dark:text-white">Dark Mode</span>
+                  <span className="text-[#1A1A1A] dark:text-white">Mode Gelap</span>
                 </div>
                 <button
                   onClick={toggleTheme}
@@ -308,7 +346,7 @@ export default function Profile({ currentUser, onLogout, onBack }) {
               <button className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F5] dark:hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-3">
                   <Bell className="w-5 h-5 text-[#1A1A1A]/60 dark:text-white/60" />
-                  <span className="text-[#1A1A1A] dark:text-white">Notifications</span>
+                  <span className="text-[#1A1A1A] dark:text-white">Notifikasi</span>
                 </div>
               </button>
             </div>
@@ -320,7 +358,7 @@ export default function Profile({ currentUser, onLogout, onBack }) {
             className="w-full bg-red-50 dark:bg-red-600/10 hover:bg-red-100 dark:hover:bg-red-600/20 text-red-600 dark:text-red-400 rounded-xl p-4 flex items-center justify-center gap-2 transition-colors border border-red-200 dark:border-red-600/20"
           >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">Keluar</span>
           </button>
         </div>
       </main>

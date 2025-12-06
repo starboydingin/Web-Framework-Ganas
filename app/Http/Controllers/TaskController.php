@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\TaskReminder;
+use App\Models\Project;
 use App\Services\TaskService;
 
 class TaskController extends Controller
@@ -39,18 +40,107 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $projectId = $request->query('project_id');
-        $tasks = $projectId ? $this->service->getTasksByProject($projectId)
-            : $this->service->getAllTasks();
-        // Eager load reminders for all tasks
+        $userId = $request->query('user_id');
+
+        // Get tasks from service (may be Eloquent/Query Builder, Collection, array, or models)
+        $tasks = $this->service->getAllTasks();
+
+        // Detect if the returned value is an Eloquent or Query builder so we can apply DB-level where() and call get().
+        $isEloquentBuilder = is_object($tasks) && (
+            (class_exists('\Illuminate\Database\Eloquent\Builder') && $tasks instanceof \Illuminate\Database\Eloquent\Builder) ||
+            (class_exists('\Illuminate\Database\Query\Builder') && $tasks instanceof \Illuminate\Database\Query\Builder)
+        );
+
+        if ($isEloquentBuilder) {
+            // Exclude soft-deleted tasks
+            $tasks = $tasks->whereNull('deleted_at');
+
+            if ($projectId) { $tasks = $tasks->where('project_id', $projectId); }
+            if ($userId) { $tasks = $tasks->where('user_id', $userId); }
+
+            // Exclude tasks whose project is soft-deleted
+            if (method_exists($tasks, 'whereHas')) {
+                $tasks = $tasks->whereHas('project', function ($q) {
+                    $q->whereNull('deleted_at');
+                });
+            }
+
+            $tasks = $tasks->get();
+        } else {
+            // Normalize arrays to Collection for consistent filtering/loading
+            if (is_array($tasks)) { $tasks = collect($tasks); }
+            if ($tasks instanceof \Illuminate\Support\Collection) {
+                if ($projectId) { $tasks = $tasks->where('project_id', $projectId); }
+                if ($userId) { $tasks = $tasks->where('user_id', $userId); }
+                // Exclude soft-deleted tasks
+                $tasks = $tasks->filter(function ($t) {
+                    return empty($t->deleted_at);
+                });
+            }
+        }
+
+        // Eager load reminders and project for models where possible
         if (method_exists($tasks, 'load')) {
-            $tasks->load('reminders');
+            $tasks->load(['reminders', 'project']);
+
+            // Filter out tasks whose project is soft-deleted (when project relation exists)
+            $tasks = $tasks->filter(function ($t) {
+                if (isset($t->project) && $t->project) {
+                    return empty($t->project->deleted_at);
+                }
+                return true;
+            });
         } else if (is_array($tasks)) {
-            // In case service returns array, map and load relation
+            // In case service returns plain array of models
             $tasks = collect($tasks)->map(function ($t) {
-                if ($t instanceof Task) { $t->load('reminders'); }
+                if ($t instanceof Task) {
+                    $t->load(['reminders', 'project']);
+                }
                 return $t;
+            })->filter(function ($t) {
+                if ($t instanceof Task) {
+                    if (!empty($t->deleted_at)) return false;
+                    if (isset($t->project) && $t->project && !empty($t->project->deleted_at)) return false;
+                }
+                return true;
             });
         }
+
+        // Remove tasks that belong to projects which were soft-deleted.
+        if ($tasks instanceof \Illuminate\Support\Collection) {
+            $projectIds = $tasks->pluck('project_id')->unique()->filter()->all();
+            if (!empty($projectIds)) {
+                $validProjectIds = Project::whereIn('id', $projectIds)->whereNull('deleted_at')->pluck('id')->all();
+                if (!empty($validProjectIds)) {
+                    $tasks = $tasks->filter(function ($t) use ($validProjectIds) {
+                        return in_array($t->project_id, $validProjectIds);
+                    });
+                } else {
+                    // No valid projects remain
+                    $tasks = collect([]);
+                }
+            }
+        } elseif (is_array($tasks)) {
+            // If it's still an array, reindex and then filter by project existence
+            $tasks = array_values($tasks);
+            $projectIds = array_values(array_unique(array_filter(array_map(function ($t) { return $t['project_id'] ?? null; }, $tasks))));
+            if (!empty($projectIds)) {
+                $validProjectIds = Project::whereIn('id', $projectIds)->whereNull('deleted_at')->pluck('id')->all();
+                $tasks = array_values(array_filter($tasks, function ($t) use ($validProjectIds) {
+                    return in_array($t['project_id'] ?? null, $validProjectIds);
+                }));
+            } else {
+                $tasks = [];
+            }
+        }
+
+        // Normalize result to a zero-based array for JSON so it serializes as JSON array
+        if ($tasks instanceof \Illuminate\Support\Collection) {
+            $tasks = $tasks->values();
+        } elseif (is_array($tasks)) {
+            $tasks = array_values($tasks);
+        }
+
         return response()->json($tasks);
     }
 
