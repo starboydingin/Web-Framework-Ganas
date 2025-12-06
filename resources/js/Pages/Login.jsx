@@ -1,21 +1,46 @@
+import { ArrowLeft, CheckCircle, Lock, Mail } from "lucide-react";
 import { useState } from "react";
-import { CheckCircle, Mail, Lock, ArrowLeft } from "lucide-react";
 import useTheme from "../Components/useTheme";
+import api, { setToken } from "../api/client";
 
-export default function LoginPage({ onNavigate, onLogin }) {
+export default function LoginPage() {
   const { theme, mounted } = useTheme();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    setTimeout(() => {
+    setError("");
+    try {
+      // Initialize Sanctum CSRF cookie for session auth
+      await api.initCsrf();
+      const resp = await api.login({ phone_number: phoneNumber, password });
+      // Store user and token in localStorage for future requests
+      if (resp?.user) {
+        try {
+          localStorage.setItem("auth_user", JSON.stringify(resp.user));
+        } catch {}
+      }
+      if (resp?.token) {
+        setToken(resp.token);
+      }
+      // Redirect to dashboard after successful login.
+      // Prefer Inertia visit; if it fails (e.g., version mismatch), hard navigate.
+      window.location.href = "/dashboard";
+    } catch (err) {
+      // Provide clearer messaging when server returns HTML or CSRF issues
+      const msg = typeof err?.data === "string" ? err.data : (err?.data?.message || err.message);
+      const hint = err?.status === 419
+        ? " (CSRF mismatch: try refreshing the page)"
+        : "";
+      setError((msg || "Login failed") + hint);
+    } finally {
       setIsLoading(false);
-      onLogin(phoneNumber);
-    }, 1000);
+    }
   };
 
   if (!mounted) return <div style={{ visibility: "hidden" }} />;
@@ -23,13 +48,13 @@ export default function LoginPage({ onNavigate, onLogin }) {
   return (
     <div className={`min-h-screen bg-gradient-to-br ${theme === 'light' ? 'from-white to-[#F5F5F5]' : 'from-[#0F0F0F] to-[#1A1A1A]'} flex items-center justify-center px-4 py-8 transition-colors`}>
       <div className="w-full max-w-md">
-        <button
-          onClick={() => onNavigate('landing')}
+        <a
+          href="/"
           className={`flex items-center gap-2 ${theme === 'light' ? 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]' : 'text-white/60 hover:text-white'} mb-8 transition-colors`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back to home</span>
-        </button>
+        </a>
 
         <div className={`${theme === 'light' ? 'bg-white border-[#E8E8E8]' : 'bg-[#161616] border-white/10'} rounded-2xl shadow-xl shadow-black/5 p-8 border transition-colors`}>
           <div className="flex items-center justify-center gap-2 mb-8">
@@ -45,6 +70,11 @@ export default function LoginPage({ onNavigate, onLogin }) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="text-red-500 text-sm" role="alert">
+                {error}
+              </div>
+            )}
             <div>
               <label className={`${theme === 'light' ? 'text-[#1A1A1A]' : 'text-white'} text-sm mb-2 block`}>Phone Number</label>
               <div className="relative">
@@ -93,12 +123,12 @@ export default function LoginPage({ onNavigate, onLogin }) {
 
           <div className="text-center mt-6">
             <span className={`${theme === 'light' ? 'text-[#1A1A1A]/60' : 'text-white/60'} text-sm`}>Don't have an account? </span>
-            <button
-              onClick={() => onNavigate('register')}
+            <a
+              href="/auth/register"
               className="text-[#4CAF50] text-sm hover:underline"
             >
               Sign up
-            </button>
+            </a>
           </div>
 
           <p className={`text-center text-xs mt-6 ${theme === 'light' ? 'text-[#1A1A1A]/40' : 'text-white/40'}`}>

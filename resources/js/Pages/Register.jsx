@@ -1,8 +1,9 @@
+import { ArrowLeft, Lock, Mail, User } from "lucide-react";
 import { useState } from "react";
-import { User, Mail, Lock, CheckCircle, ArrowLeft } from "lucide-react";
 import useTheme from "../Components/useTheme";
+import api from "../api/client";
 
-export default function RegisterPage({ onNavigate }) {
+export default function RegisterPage() {
   const { theme, mounted } = useTheme();
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -32,23 +33,31 @@ export default function RegisterPage({ onNavigate }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await api.register({
+        name: fullName,
+        phone_number: phoneNumber,
+        password,
+      });
+      // Navigate to login page
+      window.location.href = "/auth/login";
+    } catch (err) {
+      setError(err?.data?.message || err.message || "Registrasi gagal");
+    } finally {
       setLoading(false);
-      alert("Registrasi berhasil!");
-      onNavigate("login");
-    }, 1200);
+    }
   };
 
   return (
     <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${theme === "light" ? "bg-gradient-to-br from-white to-[#F5F5F5]" : "bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A]"}`}>
       <div className={`max-w-md w-full p-8 rounded-2xl shadow-2xl border ${theme === "light" ? "bg-white border-[#E8E8E8]" : "bg-[#161616] border-white/10"} transition-colors duration-300`}>
-        <button
-          onClick={() => onNavigate("landing")}
+        <a
+          href="/"
           className={`flex items-center mb-6 ${theme === "light" ? "text-gray-600 hover:text-gray-800" : "text-white/70 hover:text-white"}`}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Home
-        </button>
+        </a>
 
         <h2 className={`text-2xl font-bold mb-6 ${theme === "light" ? "text-[#1A1A1A]" : "text-white"}`}>
           Create Account
@@ -140,12 +149,12 @@ export default function RegisterPage({ onNavigate }) {
 
         <p className={`text-sm mt-4 text-center ${theme === "light" ? "text-gray-600" : "text-white/70"}`}>
           Already have an account?{" "}
-          <span
-            onClick={() => onNavigate("login")}
+          <a
+            href="/auth/login"
             className="text-[#4CAF50] font-semibold cursor-pointer hover:underline"
           >
             Login
-          </span>
+          </a>
         </p>
       </div>
     </div>

@@ -1,65 +1,31 @@
-import { useState, useEffect } from "react";
-import { CheckCircle, Bell, Share2, Clock, Sun, Moon, Mail, MapPin, Phone, Facebook, Twitter, Instagram, Linkedin, Github } from "lucide-react";
+import { router } from "@inertiajs/react";
+import { Bell, CheckCircle, Clock, Github, Instagram, Linkedin, Mail, MapPin, Moon, Phone, Share2, Sun, Twitter } from "lucide-react";
+import { useEffect } from "react";
 import useTheme from "../Components/useTheme";
-import RegisterPage from "./Register";
-import LoginPage from "./Login";
-import Dashboard from "./Dashboard";
+// Home is a pure landing page; Login/Register/Dashboard are routed separately.
 
-export default function Home({ onNavigate }) {
+export default function Home() {
   const { theme, toggleTheme, mounted } = useTheme();
-  const [page, setPage] = useState("landing");
-  const [currentUser, setCurrentUser] = useState(null);
-
-  const handleNavigate = (target) => {
-    if (target === "register") {
-      setPage("register");
-    } else if (target === "login") {
-      setPage("login");
-    } else if (target === "dashboard") {
-      setPage("dashboard");
-    } else {
-      setPage("landing");
-      if (onNavigate) onNavigate(target);
-    }
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setPage("landing");
-  };
+  
 
   useEffect(() => {
+    // If user is already logged in, navigate to dashboard
+    try {
+      const token = localStorage.getItem('auth_token');
+      const userStr = localStorage.getItem('auth_user');
+      if (token || userStr) {
+        try {
+          router.visit('/dashboard');
+        } catch {
+          window.location.href = '/dashboard';
+        }
+        return;
+      }
+    } catch {}
     window.scrollTo(0, 0);
   }, []);
 
   if (!mounted) return <div style={{ visibility: "hidden" }} />;
-
-  if (page === "register") {
-    return <RegisterPage onNavigate={handleNavigate} />;
-  }
-
-  if (page === "login") {
-    return (
-      <LoginPage
-        onNavigate={handleNavigate}
-        onLogin={(email) => {
-          console.log("User logged in:", email);
-          setCurrentUser(email);
-          handleNavigate("dashboard");
-        }}
-      />
-    );
-  }
-
-  if (page === "dashboard") {
-    return (
-      <Dashboard
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-        currentUser={currentUser}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-[#F5F5F5] dark:from-[#0F0F0F] dark:to-[#1A1A1A] transition-colors duration-300">
@@ -88,19 +54,19 @@ export default function Home({ onNavigate }) {
               )}
             </button>
 
-            <button
-              onClick={() => handleNavigate("login")}
+            <a
+              href="/auth/login"
               className="px-6 py-2 text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 rounded-lg transition"
             >
               Masuk
-            </button>
+            </a>
 
-            <button
-              onClick={() => handleNavigate("register")}
+            <a
+              href="/auth/register"
               className="px-6 py-2 bg-[#4CAF50] text-white rounded-lg hover:bg-[#45a049] transition shadow-sm"
             >
               Daftar Akun
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -125,18 +91,18 @@ export default function Home({ onNavigate }) {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={() => handleNavigate("register")}
+                <a
+                  href="/auth/register"
                   className="px-8 py-3 bg-[#4CAF50] text-white rounded-xl hover:bg-[#45a049] transition shadow-lg shadow-[#4CAF50]/20"
                 >
                   Mulai Gratis
-                </button>
-                <button
-                  onClick={() => handleNavigate("login")}
+                </a>
+                <a
+                  href="/auth/login"
                   className="px-8 py-3 bg-white dark:bg-[#2A2A2A] text-[#1A1A1A] dark:text-white border border-[#E8E8E8] dark:border-white/10 rounded-xl hover:border-[#4CAF50] transition"
                 >
                   Masuk
-                </button>
+                </a>
               </div>
             </div>
 
@@ -230,12 +196,12 @@ export default function Home({ onNavigate }) {
             <p className="text-white/90 mb-8 max-w-2xl mx-auto">
               Join thousands of users who are already managing their tasks efficiently.
             </p>
-            <button
-              onClick={() => handleNavigate("register")}
+            <a
+              href="/auth/register"
               className="px-8 py-3 bg-white text-[#4CAF50] rounded-xl hover:bg-[#F5F5F5] transition shadow-lg"
             >
               Start Free Today
-            </button>
+            </a>
           </div>
         </div>
       </section>

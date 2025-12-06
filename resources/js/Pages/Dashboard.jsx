@@ -1,28 +1,27 @@
-import { useState, useEffect } from 'react';
-import { 
-  CheckCircle, 
-  Plus, 
-  Search, 
+import {
   Bell,
-  User,
-  LogOut,
-  MoreVertical,
-  Edit2,
-  Trash2,
-  Share2,
+  CheckCircle,
   Clock,
-  Filter,
-  Sun,
-  Moon,
-  X,
+  Edit2,
   Folder,
   FolderOpen,
-  Lock,
   Globe,
-  ChevronRight
+  Lock,
+  LogOut,
+  Moon,
+  MoreVertical,
+  Plus,
+  Search,
+  Share2,
+  Sun,
+  Trash2,
+  User,
+  X
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Profile from '../Components/Profile';
 import ShareModal from '../Components/ShareModal';
+import api from '../api/client';
 
 export default function Dashboard({ onNavigate, onLogout, currentUser }) {
   const [projects, setProjects] = useState([]);
@@ -41,9 +40,16 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
   const [showNotification, setShowNotification] = useState(false);
   const [theme, setTheme] = useState('light');
   const [showProfile, setShowProfile] = useState(false);
-  const [displayName, setDisplayName] = useState(
-    localStorage.getItem('userName') || (currentUser ? currentUser.split('@')[0] : 'User')
-  );
+  const [displayName, setDisplayName] = useState(() => {
+    try {
+      const authUserStr = localStorage.getItem('auth_user');
+      if (authUserStr) {
+        const authUser = JSON.parse(authUserStr);
+        return authUser?.name || authUser?.phone_number || 'User';
+      }
+    } catch {}
+    return localStorage.getItem('userName') || (currentUser ? currentUser.split('@')[0] : 'User');
+  });
   const [notifications, setNotifications] = useState([]);
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null, itemType: null });
 
@@ -63,33 +69,32 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
   });
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        onNavigate && onNavigate('login');
+        return;
+      }
+    } catch {}
+
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
 
-    const savedProjects = localStorage.getItem('projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    } else {
-      const mockProjects = [
-        {
-          id: '1',
-          title: 'Tugas Kuliah',
-          description: 'Project untuk tugas-tugas kuliah',
-          is_private: false,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: 'Tugas Praktikum',
-          description: 'Project untuk tugas praktikum',
-          is_private: true,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      setProjects(mockProjects);
-      localStorage.setItem('projects', JSON.stringify(mockProjects));
-    }
+    // Fetch projects from API
+    (async () => {
+      try {
+        const authUserStr = localStorage.getItem('auth_user');
+        const authUser = authUserStr ? JSON.parse(authUserStr) : null;
+        const data = await api.projects.list(authUser?.id ? { user_id: authUser.id } : {});
+        setProjects(data || []);
+      } catch (err) {
+        // Fallback to local data if API fails
+        const savedProjects = localStorage.getItem('projects');
+        if (savedProjects) setProjects(JSON.parse(savedProjects));
+      }
+    })();
 
     const savedTasks = localStorage.getItem('tasks');
     if (savedTasks) {
@@ -185,15 +190,22 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  const handleAddProject = (projectData) => {
-    const newProject = {
-      ...projectData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    setProjects([newProject, ...projects]);
-    setIsProjectModalOpen(false);
-    resetProjectForm();
+  const handleAddProject = async (projectData) => {
+    try {
+      const authUserStr = localStorage.getItem('auth_user');
+      const authUser = authUserStr ? JSON.parse(authUserStr) : null;
+      const payload = {
+        title: projectData.title,
+        description: projectData.description,
+        is_private: projectData.is_private,
+      };
+      const created = await api.projects.create(payload);
+      setProjects([created, ...projects]);
+      setIsProjectModalOpen(false);
+      resetProjectForm();
+    } catch (err) {
+      alert(err?.data?.message || err.message || 'Failed to create project');
+    }
   };
 
   const handleEditProject = (projectData) => {
@@ -416,7 +428,14 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
     return (
       <Profile
         currentUser={currentUser}
-        onLogout={onLogout}
+        onLogout={() => {
+          try {
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('auth_token');
+          } catch {}
+          onLogout && onLogout();
+          onNavigate && onNavigate('login');
+        }}
         onBack={() => {
           const updatedName = localStorage.getItem('userName') || (currentUser ? currentUser.split('@')[0] : 'User');
           setDisplayName(updatedName);
@@ -461,7 +480,6 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
                   <Sun className="w-5 h-5 text-yellow-300" />
                 )}
               </button>
-
               <button
                 onClick={() => setShowNotification(!showNotification)}
                 className="p-2 hover:bg-[#F5F5F5] dark:hover:bg-white/10 rounded-lg transition-colors relative"
@@ -504,7 +522,20 @@ export default function Dashboard({ onNavigate, onLogout, currentUser }) {
                       Profile
                     </button>
                     <button
-                      onClick={onLogout || (() => alert('Logout'))}
+                      onClick={async () => {
+                        try {
+                          await api.logout();
+                        } catch {}
+                        try {
+                          localStorage.removeItem('auth_user');
+                          localStorage.removeItem('auth_token');
+                          localStorage.removeItem('projects');
+                          localStorage.removeItem('tasks');
+                          localStorage.removeItem('notifications');
+                        } catch {}
+                        if (onLogout) onLogout();
+                        window.location.href = '/';
+                      }}
                       className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                     >
                       <LogOut className="w-4 h-4" />
