@@ -78,7 +78,7 @@ export default function Home() {
             {/* Left Content */}
             <div className="space-y-6">
               <div className="inline-block px-4 py-1.5 bg-[#4CAF50]/10 text-[#4CAF50] rounded-full text-sm">
-                ✨ Smart Task Management
+                ✨ Manajemen Tugas Cerdas
               </div>
 
               <h1 className="text-[#1A1A1A] dark:text-white text-4xl font-bold">
@@ -110,9 +110,9 @@ export default function Home() {
             <div className="relative">
               <div className="bg-white dark:bg-[#161616] rounded-2xl shadow-2xl p-6 border border-[#E8E8E8] dark:border-white/10">
                 <div className="space-y-4">
-                  {[{ title: "Submit assignment", time: "Due in 2 hours", priority: "high", done: false },
-                    { title: "Team meeting preparation", time: "Due in 4 hours", priority: "medium", done: false },
-                    { title: "Review pull request", time: "Due tomorrow", priority: "low", done: true }
+                  {[{ title: "Kumpulkan tugas", time: "Jatuh tempo dalam 2 jam", priority: "high", done: false },
+                    { title: "Persiapan rapat tim", time: "Jatuh tempo dalam 4 jam", priority: "medium", done: false },
+                    { title: "Tinjau pull request", time: "Jatuh tempo besok", priority: "low", done: true }
                   ].map((task, idx) => (
                     <div
                       key={idx}
@@ -144,7 +144,7 @@ export default function Home() {
                               ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-600/20 dark:text-yellow-300"
                               : "bg-blue-100 text-blue-600 dark:bg-blue-600/20 dark:text-blue-300"
                           }`}>
-                            {task.priority}
+                            {task.priority === "high" ? "tinggi" : task.priority === "medium" ? "sedang" : "rendah"}
                           </span>
                         </div>
                       </div>
@@ -163,18 +163,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[#1A1A1A] dark:text-white mb-4 text-3xl font-semibold">
-              Everything you need to stay organized
+              Semua yang Anda perlukan untuk tetap terorganisir
             </h2>
             <p className="text-[#1A1A1A]/60 dark:text-white/60 max-w-2xl mx-auto">
-              Powerful features designed to help you manage tasks efficiently.
+              Fitur hebat yang dirancang untuk membantu Anda mengelola tugas secara efisien.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[{ icon: CheckCircle, title: "Task Management", description: "Create, edit, and organize tasks with ease. Set priorities and deadlines." },
-              { icon: Bell, title: "WhatsApp Reminders", description: "Get timely notifications on WhatsApp before your task deadlines." },
-              { icon: Share2, title: "Share Tasks", description: "Share task lists with team members and collaborate effectively." },
-              { icon: Clock, title: "Smart Scheduling", description: "Intelligent deadline tracking with countdown timers and alerts." }
+            {[{ icon: CheckCircle, title: "Manajemen Tugas", description: "Buat, edit, dan susun tugas dengan mudah. Atur prioritas dan tenggat waktu." },
+              { icon: Bell, title: "Pengingat WhatsApp", description: "Dapatkan notifikasi tepat waktu di WhatsApp sebelum tenggat tugas." },
+              { icon: Share2, title: "Bagikan Tugas", description: "Bagikan daftar tugas dengan tim dan berkolaborasi secara efektif." },
+              { icon: Clock, title: "Penjadwalan Pintar", description: "Pelacakan tenggat yang cerdas dengan hitung mundur dan peringatan." }
             ].map((feature, idx) => (
               <div key={idx} className="p-6 bg-[#F5F5F5] dark:bg-[#1B1B1B] rounded-xl hover:bg-[#E8E8E8]/50 dark:hover:bg-white/10 transition">
                 <div className="w-12 h-12 bg-[#4CAF50]/10 rounded-lg flex items-center justify-center mb-4">
@@ -192,15 +192,15 @@ export default function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-[#4CAF50] to-[#45a049] rounded-2xl p-12 text-white shadow-xl">
-            <h2 className="text-3xl font-semibold mb-4">Ready to get started?</h2>
+            <h2 className="text-3xl font-semibold mb-4">Siap untuk mulai?</h2>
             <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who are already managing their tasks efficiently.
+              Bergabunglah dengan ribuan pengguna yang telah mengelola tugas mereka secara efisien.
             </p>
             <a
               href="/auth/register"
               className="px-8 py-3 bg-white text-[#4CAF50] rounded-xl hover:bg-[#F5F5F5] transition shadow-lg"
             >
-              Start Free Today
+              Mulai Gratis Hari Ini
             </a>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function Home() {
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-[#1A1A1A] dark:text-white font-semibold mb-4">Quick Links</h3>
+              <h3 className="text-[#1A1A1A] dark:text-white font-semibold mb-4">Tautan Cepat</h3>
               <ul className="space-y-3">
                 {["Beranda", "Fitur", "Tentang Kami"].map((link, idx) => (
                   <li key={idx}>
@@ -255,9 +255,9 @@ export default function Home() {
 
             {/* Support */}
             <div>
-              <h3 className="text-[#1A1A1A] dark:text-white font-semibold mb-4">Support</h3>
+              <h3 className="text-[#1A1A1A] dark:text-white font-semibold mb-4">Dukungan</h3>
               <ul className="space-y-3">
-                {["Help Center", "Dokumentasi", "Kebijakan Privasi", "Syarat & Ketentuan", "Hubungi Kami"].map((link, idx) => (
+                {["Pusat Bantuan", "Dokumentasi", "Kebijakan Privasi", "Syarat & Ketentuan", "Hubungi Kami"].map((link, idx) => (
                   <li key={idx}>
                     <a href="#" className="text-[#1A1A1A]/60 dark:text-white/60 hover:text-[#4CAF50] dark:hover:text-[#4CAF50] text-sm transition">
                       {link}
@@ -299,17 +299,17 @@ export default function Home() {
           <div className="pt-8 border-t border-[#E8E8E8] dark:border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm text-center md:text-left">
-                © 2025 SemTu (Semi-Tugas). All rights reserved.
+                © 2025 SemTu (Semi-Tugas). Hak cipta dilindungi.
               </p>
               <div className="flex gap-6">
                 <a href="#" className="text-[#1A1A1A]/60 dark:text-white/60 hover:text-[#4CAF50] dark:hover:text-[#4CAF50] text-sm transition">
-                  Privacy Policy
+                  Kebijakan Privasi
                 </a>
                 <a href="#" className="text-[#1A1A1A]/60 dark:text-white/60 hover:text-[#4CAF50] dark:hover:text-[#4CAF50] text-sm transition">
-                  Terms of Service
+                  Ketentuan Layanan
                 </a>
                 <a href="#" className="text-[#1A1A1A]/60 dark:text-white/60 hover:text-[#4CAF50] dark:hover:text-[#4CAF50] text-sm transition">
-                  Cookies
+                  Cookie
                 </a>
               </div>
             </div>

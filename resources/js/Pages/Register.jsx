@@ -56,11 +56,11 @@ export default function RegisterPage() {
           className={`flex items-center mb-6 ${theme === "light" ? "text-gray-600 hover:text-gray-800" : "text-white/70 hover:text-white"}`}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Home
+          Kembali ke Beranda
         </a>
 
         <h2 className={`text-2xl font-bold mb-6 ${theme === "light" ? "text-[#1A1A1A]" : "text-white"}`}>
-          Create Account
+          Buat Akun
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,7 +68,7 @@ export default function RegisterPage() {
             <User className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder="Nama Lengkap"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className={`w-full flex items-center border rounded-lg p-3 ${theme === "light" ? "text-gray-700" : "text-white bg-transparent"}`}
@@ -80,7 +80,7 @@ export default function RegisterPage() {
             <Mail className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
             <input
               type="tel"
-              placeholder="Phone Number"
+              placeholder="Nomor Telepon"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className={`w-full flex items-center border rounded-lg p-3 ${theme === "light" ? "text-gray-700" : "text-white bg-transparent"}`}
@@ -92,7 +92,7 @@ export default function RegisterPage() {
             <Lock className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
             <input
               type="password"
-              placeholder="Password"
+              placeholder="Kata Sandi"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`w-full flex items-center border rounded-lg p-3 ${theme === "light" ? "text-gray-700" : "text-white bg-transparent"}`}
@@ -104,25 +104,13 @@ export default function RegisterPage() {
             <Lock className={`w-5 h-5 mr-3 ${theme === "light" ? "text-gray-400" : "text-white/50"}`} />
             <input
               type="password"
-              placeholder="Confirm Password"
+              placeholder="Konfirmasi Kata Sandi"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={`w-full flex items-center border rounded-lg p-3 ${theme === "light" ? "text-gray-700" : "text-white bg-transparent"}`}
               required
             />
           </div>
-
-          <label className={`flex items-center space-x-2 ${theme === "light" ? "text-gray-600" : "text-white/70"}`}>
-            <input
-              type="checkbox"
-              checked={termsChecked}
-              onChange={(e) => setTermsChecked(e.target.checked)}
-              className="w-4 h-4 text-[#4CAF50] border-gray-300 rounded focus:ring-2 focus:ring-[#4CAF50]"
-            />
-            <span className="text-sm">
-              I agree to the <span className="text-[#4CAF50] underline">Terms & Privacy</span>
-            </span>
-          </label>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -142,18 +130,18 @@ export default function RegisterPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
               </svg>
             ) : (
-              "Register"
+              "Daftar"
             )}
           </button>
         </form>
 
         <p className={`text-sm mt-4 text-center ${theme === "light" ? "text-gray-600" : "text-white/70"}`}>
-          Already have an account?{" "}
+          Sudah punya akun?{" "}
           <a
             href="/auth/login"
             className="text-[#4CAF50] font-semibold cursor-pointer hover:underline"
           >
-            Login
+            Masuk
           </a>
         </p>
       </div>

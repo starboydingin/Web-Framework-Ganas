@@ -269,7 +269,7 @@ export default function Dashboard() {
   const handleDeleteProject = (id) => {
     // Verify delete action
     const confirmed = typeof window !== 'undefined'
-      ? window.confirm('Delete this project? All its tasks will be removed. This action cannot be undone.')
+      ? window.confirm('Hapus proyek ini? Semua tugas akan dihapus. Tindakan ini tidak dapat dibatalkan.')
       : true;
     if (!confirmed) {
       setOpenProjectMenuId(null);
@@ -399,7 +399,7 @@ export default function Dashboard() {
 
   const handleDeleteTask = (id) => {
     // Verify delete action
-    const confirmed = typeof window !== 'undefined' ? window.confirm('Delete this task? This action cannot be undone.') : true;
+    const confirmed = typeof window !== 'undefined' ? window.confirm('Hapus tugas ini? Tindakan ini tidak dapat dibatalkan.') : true;
     if (!confirmed) return;
     const target = tasks.find(t => t.id === id);
     const prevTasks = tasks;
@@ -559,14 +559,14 @@ export default function Dashboard() {
     const deadlineDate = new Date(deadline);
     const diff = deadlineDate.getTime() - now.getTime();
     
-    if (diff < 0) return 'Overdue';
+    if (diff < 0) return 'Terlambat';
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `Due in ${days} day${days > 1 ? 's' : ''}`;
-    if (hours > 0) return `Due in ${hours} hour${hours > 1 ? 's' : ''}`;
-    return 'Due soon';
+    if (days > 0) return `Jatuh tempo dalam ${days} hari`;
+    if (hours > 0) return `Jatuh tempo dalam ${hours} jam`;
+    return 'Segera jatuh tempo';
   };
 
   const projectTasks = selectedProject 
@@ -622,7 +622,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#1A1A1A] flex items-center justify-center transition-colors">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#4CAF50]/20 border-t-[#4CAF50] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#1A1A1A]/60 dark:text-white/60">Loading your tasks...</p>
+          <p className="text-[#1A1A1A]/60 dark:text-white/60">Memuat tugas Anda...</p>
         </div>
       </div>
     );
@@ -638,7 +638,7 @@ export default function Dashboard() {
               <div className="w-8 h-8 bg-[#4CAF50] rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="text-[#1A1A1A] dark:text-white hidden sm:block font-medium">Task Reminder System</span>
+              <span className="text-[#1A1A1A] dark:text-white hidden sm:block font-medium">SemTu (Semi-Tugas)</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -680,8 +680,8 @@ export default function Dashboard() {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#2A2A2A] rounded-xl shadow-lg border border-[#E8E8E8] dark:border-[#333] py-2">
                     <div className="px-4 py-2 border-b border-[#E8E8E8] dark:border-[#333]">
-                      <p className="text-[#1A1A1A] dark:text-white text-sm truncate">{currentUser || 'user@example.com'}</p>
-                      <p className="text-[#1A1A1A]/60 dark:text-white/60 text-xs">Free Plan</p>
+                      <p className="text-[#1A1A1A] dark:text-white text-sm truncate">{currentUser || 'pengguna@contoh.com'}</p>
+                      <p className="text-[#1A1A1A]/60 dark:text-white/60 text-xs">Paket Gratis</p>
                     </div>
                     <button
                       onClick={() => {
@@ -691,7 +691,7 @@ export default function Dashboard() {
                       className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                     >
                       <User className="w-4 h-4" />
-                      Profile
+                      Profil
                     </button>
                     <button
                       onClick={async () => {
@@ -711,7 +711,7 @@ export default function Dashboard() {
                       className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                     >
                       <LogOut className="w-4 h-4" />
-                      Logout
+                      Keluar
                     </button>
                   </div>
                 )}
@@ -727,7 +727,7 @@ export default function Dashboard() {
           <div className="p-4 border-b border-[#E8E8E8] dark:border-[#333] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5 text-[#4CAF50]" />
-              <h3 className="text-[#1A1A1A] dark:text-white font-semibold">Notifications</h3>
+              <h3 className="text-[#1A1A1A] dark:text-white font-semibold">Notifikasi</h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 bg-[#4CAF50] text-white text-xs rounded-full">
                   {unreadCount}
@@ -748,9 +748,9 @@ export default function Dashboard() {
                 <div className="w-16 h-16 bg-[#F5F5F5] dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Bell className="w-8 h-8 text-[#1A1A1A]/20 dark:text-white/20" />
                 </div>
-                <p className="text-[#1A1A1A] dark:text-white font-medium mb-1">No notifications</p>
+                <p className="text-[#1A1A1A] dark:text-white font-medium mb-1">Tidak ada notifikasi</p>
                 <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm">
-                  You're all caught up!
+                  Semua sudah diperbarui!
                 </p>
               </div>
             ) : (
@@ -797,7 +797,7 @@ export default function Dashboard() {
                 onClick={handleClearAllNotifications}
                 className="w-full px-4 py-2 text-center text-[#4CAF50] hover:bg-[#4CAF50]/10 rounded-lg transition-colors text-sm font-medium"
               >
-                Clear All Notifications
+                Hapus Semua Notifikasi
               </button>
             </div>
           )}
@@ -813,7 +813,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[#1A1A1A] dark:text-white font-semibold flex items-center gap-2">
                   <Folder className="w-5 h-5" />
-                  Projects
+                  Proyek
                 </h2>
                 <button
                   onClick={openAddProjectModal}
@@ -826,7 +826,7 @@ export default function Dashboard() {
               <div className="space-y-2">
                 {projects.length === 0 ? (
                   <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm text-center py-8">
-                    No projects yet. Create one!
+                    Belum ada proyek. Buat satu!
                   </p>
                 ) : (
                   projects.map((project) => (
@@ -858,7 +858,7 @@ export default function Dashboard() {
                             </h3>
                           </div>
                           <p className="text-[#1A1A1A]/60 dark:text-white/60 text-xs truncate">
-                            {(taskCounts[project.id] ?? tasks.filter(t => t.project_id === project.id).length)} tasks
+                            {(taskCounts[project.id] ?? tasks.filter(t => t.project_id === project.id).length)} tugas
                           </p>
                         </button>
                         <div className="relative">
@@ -876,21 +876,21 @@ export default function Dashboard() {
                                 className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                               >
                                 <Edit2 className="w-4 h-4" />
-                                Edit
+                                Ubah
                               </button>
                               <button
                                 onClick={() => handleShareProject(project.id)}
                                 className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                               >
                                 <Share2 className="w-4 h-4" />
-                                Share
+                                Bagikan
                               </button>
                               <button
                                 onClick={() => handleDeleteProject(project.id)}
                                 className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-600/10 flex items-center gap-2 text-sm"
                               >
                                 <Trash2 className="w-4 h-4" />
-                                Delete
+                                Hapus
                               </button>
                             </div>
                           )}
@@ -910,15 +910,15 @@ export default function Dashboard() {
                 <div className="w-16 h-16 bg-[#F5F5F5] dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FolderOpen className="w-8 h-8 text-[#1A1A1A]/20 dark:text-white/20" />
                 </div>
-                <p className="text-[#1A1A1A] dark:text-white mb-2 font-medium">No project selected</p>
+                <p className="text-[#1A1A1A] dark:text-white mb-2 font-medium">Tidak ada proyek yang dipilih</p>
                 <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-6">
-                  Select a project from the sidebar or create a new one
+                  Pilih proyek dari sidebar atau buat yang baru
                 </p>
                 <button
                   onClick={openAddProjectModal}
                   className="px-6 py-2 bg-[#4CAF50] text-white rounded-lg hover:bg-[#45a049] transition-all"
                 >
-                  Create Project
+                  Buat Proyek
                 </button>
               </div>
             ) : (
@@ -926,19 +926,19 @@ export default function Dashboard() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <div className="bg-white dark:bg-[#2A2A2A] rounded-xl p-4 border border-[#E8E8E8] dark:border-[#333] transition-colors">
-                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Total Tasks</p>
+                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Total Tugas</p>
                     <p className="text-[#1A1A1A] dark:text-white text-2xl font-semibold">{stats.total}</p>
                   </div>
                   <div className="bg-white dark:bg-[#2A2A2A] rounded-xl p-4 border border-[#E8E8E8] dark:border-[#333] transition-colors">
-                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Pending</p>
+                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Tertunda</p>
                     <p className="text-[#1A1A1A] dark:text-white text-2xl font-semibold">{stats.pending}</p>
                   </div>
                   <div className="bg-white dark:bg-[#2A2A2A] rounded-xl p-4 border border-[#E8E8E8] dark:border-[#333] transition-colors">
-                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Completed</p>
+                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Selesai</p>
                     <p className="text-[#4CAF50] text-2xl font-semibold">{stats.completed}</p>
                   </div>
                   <div className="bg-white dark:bg-[#2A2A2A] rounded-xl p-4 border border-[#E8E8E8] dark:border-[#333] transition-colors">
-                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">High Priority</p>
+                    <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-1">Prioritas Tinggi</p>
                     <p className="text-red-500 text-2xl font-semibold">{stats.high}</p>
                   </div>
                 </div>
@@ -951,7 +951,7 @@ export default function Dashboard() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search tasks..."
+                      placeholder="Cari tugas..."
                       className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#2A2A2A] border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white placeholder:text-[#1A1A1A]/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#4CAF50] transition-all"
                     />
                   </div>
@@ -962,7 +962,7 @@ export default function Dashboard() {
                       className="px-6 py-3 bg-[#4CAF50] text-white rounded-xl hover:bg-[#45a049] transition-all flex items-center gap-2 shadow-lg shadow-[#4CAF50]/20"
                     >
                       <Plus className="w-5 h-5" />
-                      <span>Add Task</span>
+                      <span>Tambah Tugas</span>
                     </button>
                   </div>
                 </div>
@@ -970,10 +970,10 @@ export default function Dashboard() {
                 {/* Filter Tabs */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                   {[
-                    { key: 'all', label: 'All Tasks', count: projectTasks.length },
-                    { key: 'pending', label: 'Pending', count: stats.pending },
-                    { key: 'completed', label: 'Completed', count: stats.completed },
-                    { key: 'high', label: 'High Priority', count: stats.high },
+                    { key: 'all', label: 'Semua Tugas', count: projectTasks.length },
+                    { key: 'pending', label: 'Tertunda', count: stats.pending },
+                    { key: 'completed', label: 'Selesai', count: stats.completed },
+                    { key: 'high', label: 'Prioritas Tinggi', count: stats.high },
                   ].map((filter) => (
                     <button
                       key={filter.key}
@@ -999,16 +999,16 @@ export default function Dashboard() {
                       <div className="w-16 h-16 bg-[#F5F5F5] dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-8 h-8 text-[#1A1A1A]/20 dark:text-white/20" />
                       </div>
-                      <p className="text-[#1A1A1A] dark:text-white mb-2 font-medium">No tasks found</p>
+                      <p className="text-[#1A1A1A] dark:text-white mb-2 font-medium">Tidak ada tugas</p>
                       <p className="text-[#1A1A1A]/60 dark:text-white/60 text-sm mb-6">
-                        {searchQuery ? 'Try adjusting your search' : 'Create your first task to get started'}
+                        {searchQuery ? 'Coba ubah kata pencarian' : 'Buat tugas pertama Anda untuk mulai'}
                       </p>
                       {!searchQuery && (
                         <button
                           onClick={openAddTaskModal}
                           className="px-6 py-2 bg-[#4CAF50] text-white rounded-lg hover:bg-[#45a049] transition-all"
                         >
-                          Add Task
+                          Tambah Tugas
                         </button>
                       )}
                     </div>
@@ -1069,7 +1069,7 @@ export default function Dashboard() {
                                   className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                                 >
                                   <Edit2 className="w-4 h-4" />
-                                  Edit
+                                  Ubah
                                 </button>
                                   <button
                                     type="button"
@@ -1077,7 +1077,7 @@ export default function Dashboard() {
                                   className="w-full px-4 py-2 text-left text-[#1A1A1A] dark:text-white hover:bg-[#F5F5F5] dark:hover:bg-white/10 flex items-center gap-2 text-sm"
                                 >
                                   <Share2 className="w-4 h-4" />
-                                  Share
+                                  Bagikan
                                 </button>
                                   <button
                                     type="button"
@@ -1085,7 +1085,7 @@ export default function Dashboard() {
                                   className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-600/10 flex items-center gap-2 text-sm"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  Delete
+                                  Hapus
                                 </button>
                               </div>
                             )}
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-[#2A2A2A] rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[#1A1A1A] dark:text-white text-xl font-semibold">
-                {editingProject ? 'Edit Project' : 'Create New Project'}
+                {editingProject ? 'Ubah Proyek' : 'Buat Proyek Baru'}
               </h2>
               <button
                 onClick={() => {
@@ -1124,13 +1124,13 @@ export default function Dashboard() {
             <form onSubmit={handleProjectSubmit} className="space-y-4">
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Project Title *
+                  Judul Proyek *
                 </label>
                 <input
                   type="text"
                   value={projectFormData.title}
                   onChange={(e) => setProjectFormData({ ...projectFormData, title: e.target.value })}
-                  placeholder="Enter project title"
+                  placeholder="Masukkan judul proyek"
                   required
                   className="w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white placeholder:text-[#1A1A1A]/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#4CAF50] transition-all"
                 />
@@ -1138,12 +1138,12 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Description
+                  Deskripsi
                 </label>
                 <textarea
                   value={projectFormData.description}
                   onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
-                  placeholder="Add project description"
+                  placeholder="Tambahkan deskripsi proyek"
                   rows="3"
                   className="w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white placeholder:text-[#1A1A1A]/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#4CAF50] transition-all resize-none"
                 />
@@ -1151,7 +1151,7 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Visibility
+                  Visibilitas
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1164,7 +1164,7 @@ export default function Dashboard() {
                     }`}
                   >
                     <Lock className="w-4 h-4" />
-                    Private
+                    Privat
                   </button>
                   <button
                     type="button"
@@ -1176,13 +1176,13 @@ export default function Dashboard() {
                     }`}
                   >
                     <Globe className="w-4 h-4" />
-                    Public
+                    Publik
                   </button>
                 </div>
                 <p className="text-xs text-[#1A1A1A]/60 dark:text-white/60 mt-2">
                   {projectFormData.is_private 
-                    ? 'Only you can see this project. Tasks cannot be shared.' 
-                    : 'Anyone can view this project. Tasks can be shared.'}
+                    ? 'Hanya Anda yang bisa melihat proyek ini. Tugas tidak dapat dibagikan.' 
+                    : 'Siapa pun dapat melihat proyek ini. Tugas bisa dibagikan.'}
                 </p>
               </div>
 
@@ -1196,13 +1196,13 @@ export default function Dashboard() {
                   }}
                   className="flex-1 px-6 py-3 bg-[#F5F5F5] dark:bg-white/5 text-[#1A1A1A] dark:text-white border border-[#E8E8E8] dark:border-[#333] rounded-xl hover:bg-[#E8E8E8] dark:hover:bg-white/10 transition-all"
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-6 py-3 bg-[#4CAF50] text-white rounded-xl hover:bg-[#45a049] transition-all shadow-lg shadow-[#4CAF50]/20"
                 >
-                  {editingProject ? 'Update' : 'Create'} Project
+                  {editingProject ? 'Perbarui' : 'Buat'} Proyek
                 </button>
               </div>
             </form>
@@ -1216,7 +1216,7 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-[#2A2A2A] rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[#1A1A1A] dark:text-white text-xl font-semibold">
-                {editingTask ? 'Edit Task' : 'Add New Task'}
+                {editingTask ? 'Ubah Tugas' : 'Tambah Tugas Baru'}
               </h2>
               <button
                 onClick={() => {
@@ -1233,13 +1233,13 @@ export default function Dashboard() {
             <form onSubmit={handleTaskSubmit} className="space-y-4">
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Task Title *
+                  Judul Tugas *
                 </label>
                 <input
                   type="text"
                   value={taskFormData.title}
                   onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
-                  placeholder="Enter task title"
+                  placeholder="Masukkan judul tugas"
                   required
                   className="w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white placeholder:text-[#1A1A1A]/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#4CAF50] transition-all"
                 />
@@ -1247,12 +1247,12 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Description
+                  Deskripsi
                 </label>
                 <textarea
                   value={taskFormData.description}
                   onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
-                  placeholder="Add task description"
+                  placeholder="Tambahkan deskripsi tugas"
                   rows="3"
                   className="w-full px-4 py-3 bg-[#F5F5F5] dark:bg-white/5 border border-[#E8E8E8] dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white placeholder:text-[#1A1A1A]/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#4CAF50] transition-all resize-none"
                 />
@@ -1260,7 +1260,7 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Deadline *
+                  Tenggat Waktu *
                 </label>
                 <input
                   type="datetime-local"
@@ -1273,7 +1273,7 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Reminder Time
+                  Waktu Pengingat
                 </label>
                 <input
                   type="datetime-local"
@@ -1285,7 +1285,7 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[#1A1A1A] dark:text-white text-sm font-medium mb-2">
-                  Priority *
+                  Prioritas *
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {['low', 'medium', 'high'].map((priority) => (
@@ -1319,13 +1319,13 @@ export default function Dashboard() {
                   }}
                   className="flex-1 px-6 py-3 bg-[#F5F5F5] dark:bg-white/5 text-[#1A1A1A] dark:text-white border border-[#E8E8E8] dark:border-[#333] rounded-xl hover:bg-[#E8E8E8] dark:hover:bg-white/10 transition-all"
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-6 py-3 bg-[#4CAF50] text-white rounded-xl hover:bg-[#45a049] transition-all shadow-lg shadow-[#4CAF50]/20"
                 >
-                  {editingTask ? 'Update' : 'Create'} Task
+                  {editingTask ? 'Perbarui' : 'Buat'} Tugas
                 </button>
               </div>
             </form>
