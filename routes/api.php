@@ -12,6 +12,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::prefix('projects')->group(function () {
         Route::post('/', [ProjectController::class, 'store']);  
+        Route::put('/{project}', [ProjectController::class, 'update']);  
         Route::post('/copy', [ProjectController::class, 'copy']);
         Route::post('/{project}/share', [ProjectController::class, 'share']);
         Route::delete('/{project}', [ProjectController::class, 'destroy']);

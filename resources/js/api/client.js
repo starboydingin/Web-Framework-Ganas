@@ -75,6 +75,7 @@ export const api = {
       return request(`/projects${qs ? `?${qs}` : ``}`);
     },
     create: (payload) => request("/projects", { method: "POST", body: payload }),
+    update: (projectId, payload) => request(`/projects/${projectId}`, { method: "PUT", body: payload }),
     copy: (projectId) => request(`/projects/${projectId}/copy`, { method: "POST" }),
     share: (projectId) => request(`/projects/${projectId}/share`, { method: "POST" }),
     delete: (projectId) => request(`/projects/${projectId}`, { method: "DELETE" }),

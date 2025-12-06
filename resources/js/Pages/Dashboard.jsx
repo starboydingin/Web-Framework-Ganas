@@ -243,14 +243,26 @@ export default function Dashboard() {
 
   const handleEditProject = (projectData) => {
     if (editingProject) {
-      setProjects(projects.map(p => 
-        p.id === editingProject.id 
-          ? { ...projectData, id: p.id, createdAt: p.createdAt }
-          : p
-      ));
-      setEditingProject(null);
-      setIsProjectModalOpen(false);
-      resetProjectForm();
+      (async () => {
+        try {
+          const payload = {
+            title: projectData.title,
+            description: projectData.description,
+            is_private: projectData.is_private,
+          };
+          const updated = await api.projects.update(editingProject.id, payload);
+          setProjects(projects.map(p => 
+            p.id === editingProject.id 
+              ? { ...p, ...updated }
+              : p
+          ));
+          setEditingProject(null);
+          setIsProjectModalOpen(false);
+          resetProjectForm();
+        } catch (err) {
+          alert(err?.data?.message || err.message || 'Failed to update project');
+        }
+      })();
     }
   };
 

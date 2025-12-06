@@ -30,4 +30,24 @@ class ProjectService
 
         return $newProject;
     }
+
+    public function updateProject(Project $project, array $data): Project
+    {
+        // Only allow updatable fields
+        $fields = [
+            'title',
+            'description',
+            'is_private',
+        ];
+
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $project->{$field} = $data[$field];
+            }
+        }
+
+        $project->save();
+
+        return $project->fresh();
+    }
 }

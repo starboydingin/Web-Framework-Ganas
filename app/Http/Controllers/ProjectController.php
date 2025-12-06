@@ -66,6 +66,19 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function update(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'is_private' => 'nullable|boolean',
+        ]);
+
+        $updated = $this->service->updateProject($project, $data);
+
+        return response()->json($updated);
+    }
+
     public function destroy(Request $request, Project $project)
     {
         $project->delete();
